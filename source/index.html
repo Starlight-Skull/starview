@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="/img/icon.svg" type="image/x-icon" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <title>StarView</title>
+  </head>
+  <script type="module" src="/js/main.js"></script>
+  <body>
+    <main>
+      <section>
+        <!-- source canvas -->
+        <h2>Source Image</h2>
+        <div class="frame">
+          <canvas id="canvas-source"></canvas>
+        </div>
+        <div class="row">
+          <div id="img-source"></div>
+          <input multiple onchange="loadSource(event)" type="file" accept="image/png" />
+          <p id="info-source"></p>
+          <button onclick="restore()">Restore</button>
+        </div>
+        <!-- uv canvas -->
+        <h2>LUT / UV Map <button onclick="toggleUV()">Expand</button></h2>
+        <section id="uv" class="hidden">
+          <div class="frame">
+            <canvas id="canvas-uv"></canvas>
+          </div>
+          <div class="row">
+            <img id="img-uv" />
+            <input onchange="loadUV(event)" type="file" accept="image/png" />
+            <p id="info-uv"></p>
+            <button onclick="applyUV()">Apply</button>
+          </div>
+        </section>
+      </section>
+      <section>
+        <!-- animation canvas -->
+        <h2>Animation</h2>
+        <div class="frame">
+          <canvas id="canvas-animate"></canvas>
+        </div>
+        <nav>
+          <a href="/pages/uv-demo.html">UV Demo</a>
+          |
+          <a href="/pages/color-test.html">Generate UV</a>
+        </nav>
+        <div class="panel">
+          <div class="col">
+            <h3>Settings <p id="info-animate"></p></h3>
+            <div class="row">
+              <button id="play" onclick="togglePlay()">Play</button>
+              <button onclick="nextFrame(-1)">&larr;</button>
+              <button onclick="nextFrame(0)">&orarr;</button>
+              <button onclick="nextFrame(1)">&rarr;</button>
+              <button onclick="store({save: true})">Save to localStorage</button>
+              <button onclick="store({save: false})">Load</button>
+            </div>
+            <label>
+              ms/f<input
+                id="speed"
+                onchange="changeSpeed(event)"
+                step="100"
+                type="number"
+              />
+            </label>
+            <label>
+              Frames<div>
+                <button onclick="mod('frames', '*2')">*2</button>
+                <button onclick="mod('frames', '/2')">/2</button>
+                <input
+                  id="frames"
+                  onchange="changeFrames(event)"
+                  step="1"
+                  type="number"
+                />
+              </div>
+            </label>
+            <label>
+              x<div>
+                <button onclick="mod('x', '+w')">+w</button>
+                <button onclick="mod('x', '-w')">-w</button>
+                <input id="x" onchange="changeX(event)" step="1" type="number" />
+              </div>
+            </label>
+            <label>
+              y<div>
+                <button onclick="mod('y', '+h')">+h</button>
+                <button onclick="mod('y', '-h')">-h</button>
+                <input id="y" onchange="changeY(event)" step="1" type="number" />
+              </div>
+            </label>
+            <label>
+              w<div>
+                <button onclick="mod('w', '/frames')">/frames</button>
+                <button onclick="mod('w', '*2')">*2</button>
+                <button onclick="mod('w', '/2')">/2</button>
+                <input id="w" onchange="changeW(event)" step="1" type="number" />
+              </div>
+            </label>
+            <label>
+              h<div>
+                <button onclick="mod('h', '*2')">*2</button>
+                <button onclick="mod('h', '/2')">/2</button>
+                <input id="h" onchange="changeH(event)" step="1" type="number" />
+              </div>
+            </label>
+          </div>
+          <div class="col">
+            <h3>Colors</h3>
+            <ul id="color-list"></ul>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
+

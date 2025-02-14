@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StarView</title>
+</head>
+
+<style>
+  * {
+    padding: 0;
+    margin: 0;
+  }
+
+  .section {
+    border: 3px solid #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .frame {
+    border: 3px solid #000;
+    background: #003d2e;
+    height: 35vh;
+    width: 40vw;
+    margin: 2rem;
+  }
+
+  canvas {
+    border: 1px solid #000;
+    image-rendering: pixelated;
+  }
+
+  #colors span {
+    font-weight: bold;
+    font-size: x-large;
+    color: #000;
+  }
+</style>
+
+<body style="
+      background: #250044;
+      color: #fff;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+    ">
+  <div class="section">
+    <div class="frame">
+      <canvas id="canvas-uv" style="height: inherit"></canvas>
+    </div>
+      <img id="img-uv" style="display: none" src="/img/hero.uv.png" />
+      <img id="img" style="image-rendering: pixelated;" src="/img/hero_walk.mesh.png" />
+    <div class="frame">
+      <canvas id="canvas-source" style="width: inherit"></canvas>
+      <!-- <img id="img" style="width: inherit; display: none;" crossorigin="anonymous" src="https://raw.githubusercontent.com/Starlight-Skull/seasonfall/main/source/textures/entity/hero.png" /> -->
+    </div>
+  </div>
+  <div class="section">
+    <div class="frame">
+      <canvas id="canvas-color" style="height: inherit"></canvas>
+    </div>
+    <div>
+      <input id="speed" value="90" type="number" step="10" onchange="() => { speed = event.target.value}" />
+      <button id="play" onclick="togglePlay()">Play</button>
+      <button id="frame" onclick="nextFrame()">Frame: 0</button>
+      <button onclick="parse()">Parse</button>
+      <button onclick="restore()">Restore</button>
+    </div>
+    <div class="frame">
+      <ul id="colors" style="list-style: none; overflow-y: scroll; height: inherit"></ul>
+    </div>
+  </div>
+</body>
+
+<script id="prefs">
+  function generateUV() {
+    canvasUV.width = 32
+    canvasUV.height = 32
+    let genImgData = ctxUV.getImageData(0, 0, 32, 32)
+    let genPixData = genImgData.data
+    for (let i = 0; i < genPixData.length; i += 4) {
+      genPixData[i + 0] = ((i / 4) % genImgData.width)
+      genPixData[i + 1] = Math.floor((i / 4) / genImgData.width)
+      genPixData[i + 2] = 0
+      genPixData[i + 3] = 255
+    }
+    ctxUV.putImageData(genImgData, 0, 0)
+  }
+
+  function loadPrefs() {
+    const hero_walk = { img: imgSrc, x: 0, y: 0, w: 16, h: 32, frames: 6, mesh: true }
+    sprite = hero_walk
+    w = sprite.w * sprite.frames
+    h = sprite.h
+    canvasSource.width = sprite.img.width
+    canvasSource.height = sprite.img.height
+    canvasColor.width = w
+    canvasColor.height = h
+  }
+</script>
+
+<script id="defs">
+  const imgSrc = document.getElementById('img')
+  const imgUV = document.getElementById('img-uv')
+  const colors = document.getElementById('colors')
+  const frame = document.getElementById('frame')
+  const play = document.getElementById('play')
+  const speed = document.getElementById('speed')
+  const canvasUV = document.getElementById('canvas-uv')
+  const canvasColor = document.getElementById('canvas-color')
+  const canvasSource = document.getElementById('canvas-source')
+  const ctxUV = canvasUV.getContext('2d')
+  const ctxColor = canvasColor.getContext('2d')
+  const ctxSource = canvasSource.getContext('2d')
+  let sprite
+  let imageData, pixelData
+  let colorset = []
+  let prevTime = 0
+  let dT
+  let currentFrame = 0
+  let currentSpeed = 500
+  let isPlaying = false
+  let scale = 10
+  let x = 0
+  let y = 0
+  let w
+  let h
+
+  imgSrc.addEventListener('load', () => {
+    if (imgUV === null) {
+      generateUV()
+    } else {
+      canvasUV.width = imgUV.width
+      canvasUV.height = imgUV.width
+      ctxUV.drawImage(imgUV, 0, 0, imgUV.width, imgUV.height)
+    }
+    loadPrefs()
+    restore()
+    requestAnimationFrame(runPlay)
+  })
+
+  function restore() {
+    ctxSource.clearRect(0, 0, canvasSource.width, canvasSource.height)
+    ctxSource.drawImage(sprite.img, sprite.x, sprite.y, sprite.img.width, sprite.img.height)
+    imageData = ctxSource.getImageData(x, y, w, h)
+    pixelData = imageData.data
+    ctxSource.clearRect(0, 0, canvasSource.width, canvasSource.height)
+    ctxSource.putImageData(imageData, x, y)
+    if (sprite.mesh) applyUV()
+    parse()
+    render()
+  }
+
+  function runPlay(time) {
+    dT = time - prevTime
+    if (isPlaying && dT >= currentSpeed) {
+      nextFrame()
+      currentSpeed = speed.value
+      prevTime = time
+    }
+    requestAnimationFrame(runPlay)
+  }
+
+  function togglePlay() {
+    isPlaying = !isPlaying
+    play.innerText = isPlaying ? 'Pause' : 'Play'
+  }
+
+  function nextFrame() {
+    if (currentFrame < sprite.frames - 1) {
+      currentFrame++
+    } else {
+      currentFrame = 0
+    }
+    frame.innerText = `Frame: ${currentFrame}`
+    render()
+  }
+</script>
+
+<script id="color">
+  function render() {
+    imageData = ctxSource.getImageData(
+      x + sprite.w * currentFrame,
+      y,
+      sprite.w,
+      sprite.h
+    )
+    pixelData = imageData.data
+    ctxColor.clearRect(0, 0, canvasColor.width, canvasColor.height)
+    ctxColor.putImageData(imageData, x, y)
+  }
+
+  function parse() {
+    colorset = []
+    colors.replaceChildren()
+    for (let i = 0; i < pixelData.length; i += 4) {
+      const color = `${pixelData[i]}, ${pixelData[i + 1]}, ${pixelData[i + 2]}`
+      if (!colorset.includes(color)) {
+        let li = document.createElement('li')
+        let input = document.createElement('input')
+        let button = document.createElement('button')
+        li.appendChild(input)
+        li.appendChild(button)
+        li.style.background = `rgb(${color})`
+        input.value = color
+        button.innerText = 'Apply'
+        button.style.background = `rgb(${color})`
+        input.onchange = () => {
+          button.style.background = `rgb(${input.value})`
+        }
+        button.onclick = () => {
+          imageData = ctxSource.getImageData(x, y, w, h)
+          pixelData = imageData.data
+          debugger
+          replace2(
+            pixelData[i + 0],
+            pixelData[i + 1],
+            pixelData[i + 2],
+            input.value
+          )
+          ctxSource.clearRect(0, 0, canvasSource.width, canvasSource.height)
+          ctxSource.putImageData(imageData, x, y)
+          li.style.background = `rgb(${input.value})`
+        }
+        colorset.push(color)
+        colors.appendChild(li)
+      }
+    }
+  }
+
+  function applyUV() {
+    let uvImgData = ctxUV.getImageData(0, 0, imgUV.width, imgUV.height)
+    let uvData = uvImgData.data
+    for (let i = 0; i < pixelData.length; i += 4) {
+      if (pixelData[i + 3] === 0) {
+        pixelData[i + 0] = 0
+        pixelData[i + 1] = 0
+        pixelData[i + 2] = 0
+      } else if (pixelData[i + 2] === 0) {
+        let x = pixelData[i + 0]
+        let y = pixelData[i + 1]
+        let dI = (y * imgUV.width + x) * 4
+        pixelData[i + 0] = uvData[dI + 0]
+        pixelData[i + 1] = uvData[dI + 1]
+        pixelData[i + 2] = uvData[dI + 2]
+        pixelData[i + 3] = uvData[dI + 3]
+        // console.log(`(${x},${y}) (${dI}) (${uvData[dI]},${uvData[dI + 1]},${uvData[dI + 2]},${uvData[dI + 3]})`)
+      }
+    }
+    ctxSource.clearRect(0, 0, canvasSource.width, canvasSource.height)
+    ctxSource.putImageData(imageData, 0, 0)
+    parse()
+    render()
+  }
+
+  function replace(r, g, b, r2, g2, b2) {
+    ; (r -= 0), (g -= 0), (b -= 0)
+    ; (r2 -= 0), (g2 -= 0), (b2 -= 0)
+    for (let i = 0; i < pixelData.length; i += 4) {
+      if (
+        pixelData[i] == r &&
+        pixelData[i + 1] == g &&
+        pixelData[i + 2] == b
+      ) {
+        pixelData[i] = r2
+        pixelData[i + 1] = g2
+        pixelData[i + 2] = b2
+      }
+    }
+  }
+
+  function replace2(r, g, b, rgb) {
+    replace(r, g, b, ...rgb.split(', ', 3).map((x) => x.trim()))
+  }
+</script>
+
+</html>

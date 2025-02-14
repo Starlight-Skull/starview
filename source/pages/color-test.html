@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body style="background: #555; color: #fff;">
+  <canvas id="canvas-uv" style="height: 90vh; width: auto;"></canvas>
+</body>
+
+<script>
+  const canvasUV = document.getElementById('canvas-uv')
+  const ctxUV = canvasUV.getContext('2d')
+  ctxUV.imageSmoothingEnabled = false
+  const size = 255
+  canvasUV.width = size
+  canvasUV.height = size
+
+  generateUV()
+  function generateUV() {
+    let genImgData = ctxUV.createImageData(size, size)
+    let genPixData = genImgData.data
+    for (let x = 0; x < size; x++) {
+      for (let y = 0; y < size; y++) {
+        let i = x * 4 + y * size * 4
+        genPixData[i + 0] = x
+        genPixData[i + 1] = y
+        genPixData[i + 2] = 0
+        genPixData[i + 3] = 255
+      }
+    }
+    ctxUV.putImageData(genImgData, 0, 0)
+  }
+</script>
+
+</html>
