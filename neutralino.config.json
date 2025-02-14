@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/neutralinojs/neutralinojs/main/schemas/neutralino.config.schema.json",
+  "applicationId": "js.starlightskull.starview",
+  "version": "1.0.0",
+  "defaultMode": "browser",
+  "port": 0,
+  "documentRoot": "/source/",
+  "url": "/",
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "tokenSecurity": "one-time",
+  "logging": {
+    "enabled": true,
+    "writeToLogFile": false
+  },
+  "nativeAllowList": [
+    "app.*",
+    "os.*",
+    "filesystem.*",
+    "debug.log"
+  ],
+  "globalVariables": {},
+  "modes": {
+    "window": {
+      "title": "StarView",
+      "width": 1000,
+      "height": 800,
+      "minWidth": 400,
+      "minHeight": 200,
+      "center": true,
+      "fullScreen": false,
+      "alwaysOnTop": false,
+      "icon": "/source/img/icon.svg",
+      "enableInspector": true,
+      "borderless": false,
+      "maximize": false,
+      "hidden": false,
+      "resizable": true,
+      "exitProcessOnClose": true
+    },
+    "browser": {
+      "globalVariables": {
+        "TEST": "Test value browser"
+      },
+      "nativeBlockList": [
+        "filesystem.*"
+      ]
+    }
+  },
+  "cli": {
+    "binaryName": "StarView",
+    "resourcesPath": "/source/",
+    "extensionsPath": "/extensions/",
+    "clientLibrary": "/source/lib/neutralino.js",
+    "binaryVersion": "5.6.0",
+    "clientVersion": "5.6.0"
+  }
+}
