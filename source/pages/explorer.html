@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>StarCollect</title>
+    <link rel="shortcut icon" href="../img/icon.svg" type="image/x-icon" />
+    <script src="../lib/neutralino.js"></script>
+  </head>
+  <style>
+    li {
+      font-size: 150%;
+    }
+    li:hover {
+      color: #555;
+    }
+    li.dir {
+      cursor: pointer;
+      background-color: #aaf;
+    }
+    li.file {
+      cursor: pointer;
+      background-color: #afa;
+    }
+  </style>
+  <body>
+    <div id="app"></div>
+  </body>
+  <script>
+    Neutralino.init()
+    const FS = Neutralino.filesystem
+    const OS = Neutralino.os
+    const APP = document.getElementById('app')
+    let _path = [...NL_PATH.split('/')]
+    document.addEventListener('DOMContentLoaded', () => render())
+
+    async function render() {
+      console.log(_path)
+      let dir = await FS.readDirectory(_path.join('/'))
+      let files = [h('li.dir', '../', () => open('..', true))]
+      dir.forEach((x) => {
+        if (x.type === 'DIRECTORY') {
+          files.push(h('li.dir', `${x.entry}/`, () => open(x.entry, true)))
+        } else {
+          files.push(h('li.file', x.entry, () => open(x.entry)))
+        }
+      })
+      APP.replaceChildren(h('p', `${_path.join('/')}/`), h('ul', files))
+    }
+
+    function open(item, directory) {
+      if (directory) {
+        if (item === '..') _path.pop()
+        else _path.push(item)
+        render()
+      } else {
+        if (item.indexOf('.png') > -1 || item.indexOf('.gif') > -1) {
+          let img = h('img')
+          getLocalFileLink(`${_path.join('/')}/${item}`).then(
+            (file) => (img.src = file)
+          )
+          APP.append(img)
+        } else {
+          let cmd = `${_path.join('\\')}\\${item}`
+          console.log(cmd)
+          OS.execCommand(cmd).then(console.log)
+        }
+      }
+    }
+
+    async function getLocalFileLink(file) {
+      const arrayBuffer = await FS.readBinaryFile(file)
+      return URL.createObjectURL(new Blob([arrayBuffer]))
+    }
+
+    function h(tagName, children, onclick) {
+      let parts = tagName.split('.')
+      let tag = document.createElement(parts.shift())
+      if (parts.length > 0) tag.classList.add(parts)
+      if (Array.isArray(children) && children.length > 1) {
+        tag.append(...children)
+      } else {
+        tag.append(children)
+      }
+      if (typeof onclick === 'function') {
+        tag.onclick = onclick
+      }
+      return tag
+    }
+  </script>
+</html>
+
