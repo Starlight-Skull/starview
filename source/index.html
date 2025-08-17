@@ -57,12 +57,13 @@
               <button onclick="nextFrame(1)">&rarr;</button>
               <button onclick="store({save: true})">Save to localStorage</button>
               <button onclick="store({save: false})">Load</button>
+              <button onclick="parseImgColors()">Parse</button>
             </div>
             <label>
               ms/f<input
                 id="speed"
                 onchange="changeSpeed(event)"
-                step="100"
+                step="50"
                 type="number"
               />
             </label>
@@ -109,7 +110,7 @@
             </label>
           </div>
           <div class="col">
-            <h3>Colors</h3>
+            <h3>Colors <p id="info-colors"></p></h3>
             <ul id="color-list"></ul>
           </div>
         </div>

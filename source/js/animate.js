@@ -17,7 +17,7 @@ let x = 0
 let y = 0
 let w
 let h
-let speed
+let speed = 200
 let frames = 1
 let currentFrame
 let prevTime = 0
@@ -58,11 +58,13 @@ export function togglePlay() {
 }
 
 export function loadAnimation() {
+  x = 0
+  y = 0
   w = canvasSource.width
   h = canvasSource.height
   frames = 1
   currentFrame = 1
-  speed = 100
+  speed = 200
   storage({ save: false})
   updateUI()
   nextFrame(0)
@@ -75,6 +77,16 @@ export function storage({save}) {
     localStorage.setItem(key, JSON.stringify({speed, frames, x, y, w, h}))
     info.innerText += ' (stored)'
   } else {
+    if (key.includes('.a')) {
+      // 'filename.a16x16-7-200.png'
+      // -> [ 'filename', '16', '16', '7', '200', 'png' ]
+      let sub = key.split(/\.a(\d*)x?(\d*)-?(\d*)-?(\d*)\./g)
+      w = sub[1] !== '' ? parseInt(sub[1]) : w
+      h = sub[2] !== '' ? parseInt(sub[2]) : h
+      if (sub[1] === '' && sub[2] === '') w = h
+      frames = sub[3] !== '' ? parseInt(sub[3]) : Math.floor(canvasSource.width / w)
+      speed = sub[4] !== '' ? parseInt(sub[4]) : speed
+    }
     let storage = localStorage.getItem(key)
     if (storage === null) return console.error('localStorage entry not found')
     storage = JSON.parse(storage)

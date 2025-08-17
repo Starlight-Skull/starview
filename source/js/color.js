@@ -1,7 +1,8 @@
 import { ctx as ctxSource, canvas as canvasSource } from './image.js'
 
 const ulColors = document.getElementById('color-list')
-let colorSet = []
+const info = document.getElementById('info-colors')
+let colorSet = {}
 let imageData
 let colorData
 
@@ -16,14 +17,14 @@ export function parseImgColors() {
     canvasSource.height
   )
   colorData = imageData.data
-  colorSet = []
+  colorSet = {}
   ulColors.replaceChildren()
   for (let i = 0; i < colorData.length; i += 4) {
     if (colorData[i + 3] !== 255) continue
     if (colorSet.length > 50) {
       let p = document.createElement('p')
       p.innerText = 'Too many colors! (> 100)'
-      colorSet = []
+      colorSet = {}
       ulColors.replaceChildren()
       ulColors.appendChild(p)
       break
@@ -32,20 +33,31 @@ export function parseImgColors() {
     // const color = `rgb(${colorData[i]}, ${colorData[i + 1]}, ${
     //   colorData[i + 2]
     // })`
-    if (!colorSet.includes(color)) {
-      createColorElement(color, i)
+    if (!colorSet[color]) {
+      colorSet[color] = [1, colorData[i], colorData[i + 1], colorData[i + 2]]
+    } else {
+      colorSet[color][0]++
     }
   }
+  let sumColors = 0
+  Object.entries(colorSet).forEach(entry => {
+      sumColors += entry[1][0]
+      createColorElement(entry[0], ...entry[1])
+  })
+  info.innerText = `${sumColors} pixels`
 }
 
-function createColorElement(color, i) {
+function createColorElement(color, num, r, g, b) {
   let li = document.createElement('li')
   let input = document.createElement('input')
   let input2 = document.createElement('input')
   let button = document.createElement('button')
+  let span = document.createElement('span')
   li.appendChild(input)
   li.appendChild(input2)
   li.appendChild(button)
+  li.appendChild(span)
+  span.innerText = `x${num}`
   input.value = color
   input2.value = color
   input.type = 'color'
@@ -61,11 +73,10 @@ function createColorElement(color, i) {
     input.value = input2.value
   }
   button.onclick = () => {
-    replace([colorData[i], colorData[i + 1], colorData[i + 2]], input.value)
+    replace([r, g, b], input.value)
     ctxSource.putImageData(imageData, 0, 0)
     li.style.background = input.value
   }
-  colorSet.push(color)
   ulColors.appendChild(li)
 }
 

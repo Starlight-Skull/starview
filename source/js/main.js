@@ -10,6 +10,7 @@ import {
   storage as store,
   togglePlay
 } from './animate.js'
+import { parseImgColors } from './color.js'
 import { loadSource, restore } from './image.js'
 import { applyUV, loadUV, toggleUV } from './uv.js'
 
@@ -29,4 +30,5 @@ document.addEventListener('DOMContentLoaded', () => {
   window.applyUV = applyUV
   window.restore = restore
   window.toggleUV = toggleUV
+  window.parseImgColors = parseImgColors
 })
